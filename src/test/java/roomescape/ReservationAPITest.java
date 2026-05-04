@@ -42,24 +42,6 @@ public class ReservationAPITest {
         assertThat(response.statusCode()).isEqualTo(HttpStatus.CREATED.value());
     }
 
-    @DisplayName("예약자 이름 없이 예약을 생성하는 경우, 400을 반환한다.")
-    @Test
-    void 잘못된_요청으로_예약_생성_시_400_반환() {
-        var body = Map.of(
-                "date", LocalDate.now().toString(),
-                "timeId", 1L
-        );
-
-        var response = RestAssured
-                .given().log().all()
-                .body(body)
-                .contentType(ContentType.JSON)
-                .when().post("/reservations")
-                .then().log().all().extract();
-
-        assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
-    }
-
     @DisplayName("생성된 예약 정보를 조회한다.")
     @Test
     void 예약_조회_테스트() {
@@ -95,6 +77,64 @@ public class ReservationAPITest {
 
         // then
         assertThat(response.statusCode()).isEqualTo(HttpStatus.NO_CONTENT.value());
+    }
+
+    @DisplayName("예약자 이름 없이 예약을 생성하는 경우, 400을 반환한다.")
+    @Test
+    void 예약자_이름_없이_예약_생성_시_400_반환() {
+        var body = Map.of(
+                "date", LocalDate.now().toString(),
+                "timeId", 1L
+        );
+
+        var response = RestAssured
+                .given().log().all()
+                .body(body)
+                .contentType(ContentType.JSON)
+                .when().post("/reservations")
+                .then().log().all().extract();
+
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+    }
+
+    @DisplayName("존재하지 않는 시간 ID로 예약을 생성하는 경우, 400을 반환한다.")
+    @Test
+    void 존재하지_않는_시간_ID로_예약_생성_시_400_반환() {
+        var body = Map.of(
+                "name", "brown",
+                "date", LocalDate.now().toString(),
+                "timeId", 999L
+        );
+
+        var response = RestAssured
+                .given().log().all()
+                .body(body)
+                .contentType(ContentType.JSON)
+                .when().post("/reservations")
+                .then().log().all().extract();
+
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
+    }
+
+    @DisplayName("과거 날짜로 예약을 생성하는 경우, 400을 반환한다.")
+    @Test
+    void 과거_날짜로_예약_생성_시_400_반환() {
+        createTime();
+
+        var body = Map.of(
+                "name", "brown",
+                "date", LocalDate.now().minusDays(1).toString(),
+                "timeId", 1L
+        );
+
+        var response = RestAssured
+                .given().log().all()
+                .body(body)
+                .contentType(ContentType.JSON)
+                .when().post("/reservations")
+                .then().log().all().extract();
+
+        assertThat(response.statusCode()).isEqualTo(HttpStatus.BAD_REQUEST.value());
     }
 
     private void createTime() {
